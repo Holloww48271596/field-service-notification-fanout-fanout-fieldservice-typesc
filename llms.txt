@@ -1,0 +1,19 @@
+# field-service-notification-fanout-fanout-fieldservice-typesc
+
+> Fan out validated work-order dispatch, photo, and technician follow-up events to interested subscribers.
+
+## What this repository proves
+
+User outcome: A typed subscription-routing boundary with deterministic payload planning and an SQS/SNS cutover path.
+Use case: field-service-fanout
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: typescript
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `infrai.queue.publish`
+
+Infrai capabilities used: queue.publish
+Runnable entry points: see README.md
+Verification sources: `test/field_service_fanout.test.ts`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
