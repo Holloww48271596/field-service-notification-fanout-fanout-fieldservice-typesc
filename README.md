@@ -1,6 +1,6 @@
 # Fan out field-service work-order updates
 
-The decision here is to publish one durable notification per interested subscriber, since dispatch updates, new site photos, and technician follow-up have different audiences and need to stay independently traceable. Infrai gives you that queue behind one API and a single `INFRAI_API_KEY`; the service keeps the domain choice in a small pure function, while its HTTP boundary validates every work-order event with zod before anything is published.
+The decision is to publish one durable notification per interested subscriber, because dispatch updates, new site photos, and technician follow-up each have different audiences and should remain independently traceable. Infrai supplies that queue behind one API and a single `INFRAI_API_KEY`; the service keeps the domain decision in a small pure function, while its HTTP boundary validates every work-order event with zod before any message is published.
 
 ## Run the decision locally
 
@@ -10,7 +10,7 @@ npm test
 npm run example
 ```
 
-The focused test submits a `dispatch_changed` event for three subscribers: `dispatcher` and `customer` subscribe to dispatch changes, while `photo-review` subscribes only to photos. `npm test` checks that exactly two payloads are planned, with stable notification IDs `evt-7:dispatcher` and `evt-7:customer`, and that the dispatch status plus technician note survive the transformation.
+The focused test submits a `dispatch_changed` event for three subscribers: `dispatcher` and `customer` subscribe to dispatch changes, while `photo-review` subscribes only to photos. `npm test` verifies that exactly two payloads are planned, with stable notification IDs `evt-7:dispatcher` and `evt-7:customer`, and that the dispatch status plus technician note survive the transformation.
 
 ## Send a validated event
 
@@ -51,9 +51,9 @@ Expected response shape:
 }
 ```
 
-`src/field_service_fanout.ts` makes the business decision explicit: it filters subscriptions by event kind and creates one domain-shaped payload per match. `src/infrai_queue.ts` is the reusable edge, where `infrai.queue.publish({ payload }, notificationId)` sends an explicit POST with bearer authentication and a stable idempotency key; it decodes Infrai's envelope before classifying the result, retries rate responses with bounded exponential backoff, and honors `Retry-After`. `src/notification_service.ts` maps request validation and upstream business rejections to client-facing HTTP responses.
+`src/field_service_fanout.ts` makes the observable business choice: it filters subscriptions by event kind and creates one domain-shaped payload per match. `src/infrai_queue.ts` is the reusable edge, where `infrai.queue.publish({ payload }, notificationId)` sends an explicit POST with bearer authentication and a stable idempotency key; it decodes Infrai's envelope before classifying the result, retries rate responses with bounded exponential backoff, and honors `Retry-After`. `src/notification_service.ts` maps request validation and upstream business rejections to client-facing HTTP responses.
 
-This is the cleaner path than publishing one broad message that every consumer has to inspect. Filtering before publication makes recipient intent visible and gives each subscriber its own message identity. The broader-message approach can cut queue writes, but it ties every consumer to routing rules and makes partial delivery harder to reason about when something is late or duplicated.
+This is preferable to publishing one broad message that every consumer must inspect: filtering before publication makes recipient intent visible and gives each subscriber its own message identity. The broader-message approach can reduce the number of queue writes, but it couples every consumer to routing rules and makes partial delivery harder to reason about.
 
 ## Cut over from SQS and SNS
 
@@ -65,7 +65,7 @@ Treat the move as a routing change, not a rewrite of work-order semantics:
 4. Mirror a bounded set of non-customer test events through both paths and compare recipient IDs, photo references, status, and follow-up text.
 5. Point the field-service producer at `/work-order-events`, monitor accepted counts and downstream delivery, then stop the incumbent publish path.
 
-Rollback is the inverse routing change: pause writes to this service, restore the producer's previous SNS publish target, and keep the same event IDs so downstream deduplication stays stable. Do not dual-publish during rollback; pick one active publisher for each event boundary.
+Rollback is the inverse routing change: pause writes to this service, restore the producer's previous SNS publish target, and retain the same event IDs so downstream deduplication remains stable. Do not dual-publish during rollback; choose one active publisher for each event boundary.
 
 ## Repository boundary
 
